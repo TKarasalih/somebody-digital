@@ -57,10 +57,15 @@
     };
 
     // add text to listing
-    const addDiscount = (listingPrice, price) => {
+    const addDiscount = (listing, listingPrice, price) => {
         try {
             // create elements and declare vars
-            const discountElement = document.createElement("span");
+            const discountElement = document.createElement("span"),
+                approxPrice = listing.querySelector("p.imlk2f-0.dTXEZV");
+
+            approxPrice.innerHTML = `approx $${calculateDiscount(
+                price
+            )} <s>$${price}</s> (-20%) / bedroom`;
 
             discountElement.classList.add("sd-discount");
             discountElement.innerText = `$${calculateDiscount(price)}`;
@@ -107,7 +112,7 @@
                     calculateDiscount(price);
 
                     // add discount to DOM
-                    addDiscount(listingPrice, price);
+                    addDiscount(listing, listingPrice, price);
                 } catch (e) {
                     if (debugMode) console.log(">>> ", e.message);
                 }
