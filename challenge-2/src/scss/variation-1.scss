@@ -1,0 +1,19 @@
+$orange: rgb(246, 99, 68);
+
+.sd-destinations-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 55px;
+    .sd-destination {
+        background: $orange;
+        color: #fff;
+        padding: 2rem;
+        margin: 0 0.5rem;
+        width: 20%;
+        text-align: center;
+        text-decoration: none;
+    }
+}
+.sd-destinations-title {
+    margin-bottom: 15px;
+}

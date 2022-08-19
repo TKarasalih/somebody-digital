@@ -4,6 +4,7 @@ const express = require("express"),
     app = express();
 
 app.use("/challenge-1", express.static("challenge-1"));
+app.use("/challenge-2", express.static("challenge-2"));
 
 app.get("/", function (req, res) {
     res.send("hello world");

@@ -1,3 +1,9 @@
+@mixin mobile {
+    @media (max-width: 768px) {
+        @content;
+    }
+}
+
 $orange: rgb(246, 99, 68);
 
 .sd-discount {
@@ -16,5 +22,7 @@ $orange: rgb(246, 99, 68);
     color: #000;
 }
 span.sc-16ewn0o-0.hEyBwM {
-    text-decoration: line-through;
+    @include mobile {
+        text-decoration: line-through;
+    }
 }

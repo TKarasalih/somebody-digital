@@ -127,7 +127,8 @@
         false,
         function () {
             try {
-                listings();
+                // run for mobile only
+                if (window.innerWidth < 768) listings();
                 if (debugMode) console.log("Challenge 1 is running");
             } catch (e) {
                 if (debugMode) console.log(">>> ", e.message);
