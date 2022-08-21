@@ -75,7 +75,6 @@
                             );
                         }
                     }
-                    console.log(">>>", destinationsArr);
                 } catch (e) {
                     if (debugMode) console.log(">>> ", e.message);
                 }
@@ -163,6 +162,36 @@
         }
     };
 
+    // remove duplicates from localStorage SD_Destinations and display the last 5 destinations
+    const removeDuplicates = () => {
+        try {
+            destinationsArr = JSON.parse(
+                localStorage.getItem("SD_Destinations")
+            );
+
+            // remove duplicates
+            destinationsArr = destinationsArr.filter(
+                (destination, index) =>
+                    destinationsArr.findIndex(
+                        (destination2) =>
+                            destination2.destination === destination.destination
+                    ) === index
+            );
+            // limit to 5 destinations
+            destinationsArr = destinationsArr.slice(
+                0,
+                Math.min(destinationsArr.length, 5)
+            );
+            // update localStorage
+            localStorage.setItem(
+                "SD_Destinations",
+                JSON.stringify(destinationsArr)
+            );
+        } catch (e) {
+            if (debugMode) console.log(">>> ", e.message);
+        }
+    };
+
     const mutationObserver = (functionToCall, selector) => {
         try {
             const targetNode = document.querySelector(selector);
@@ -190,7 +219,12 @@
 
                 // render destinations w/ mutation observer
                 renderDestinations();
-                mutationObserver(renderDestinations, ".sc-18xxwx2-0.jGcqDJ");
+                mutationObserver(renderDestinations, ".sd-render");
+
+                // remove duplicates
+                removeDuplicates();
+                mutationObserver(removeDuplicates, ".sd-render");
+
                 if (debugMode) console.log("Challenge 2 is running");
             } catch (e) {
                 if (debugMode) console.log(">>> ", e.message);
