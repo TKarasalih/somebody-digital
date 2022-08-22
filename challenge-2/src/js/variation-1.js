@@ -10,7 +10,7 @@
 (() => {
     const debugMode = 1;
 
-    let destinationsArr = [];
+    let lastVisitedLocation;
 
     const waitForElements = (cssSelector, multi, callback, maxCalls) => {
         try {
@@ -22,9 +22,7 @@
                         // Checks if element 'cssSelector' exists
                         if (elementsCached.length) {
                             clearInterval(interval);
-                            callback(
-                                Array.prototype.slice.call(elementsCached, 0)
-                            );
+                            callback(Array.prototype.slice.call(elementsCached, 0));
                         }
                     } else {
                         elementsCached = document.querySelector(cssSelector);
@@ -50,35 +48,39 @@
     // store destination in local storage
     const storeDestination = () => {
         try {
-            const destinationText = document.querySelectorAll(
-                ".sc-16ewn0o-0.bRUYKR:not(.sd-stored)"
-            );
+            let destinationsArr = [];
 
-            destinationText.forEach((destination) => {
-                try {
-                    destination.classList.add("sd-stored");
+            // get destination from location.pathname
+            const destinationRaw = location.pathname.split("/")[2],
+                destinationDisplay = destinationRaw.split("-").join(" "),
+                destinationObject = {
+                    destination: destinationDisplay,
+                    url: location.href,
+                };
 
-                    // if no numbers present in the destination, then store it in local storage
-                    if (!destination.innerText.match(/\d/g)) {
-                        // get page URL and destination as object
-                        const destinationObject = {
-                            url: window.location.href,
-                            destination: destination.innerText,
-                        };
+            // get localStorage array
+            const localStorageArr = JSON.parse(localStorage.getItem("SD_Destinations"));
 
-                        // check if destination is already stored in local storage
-                        if (!destinationsArr.includes(destinationObject)) {
-                            destinationsArr.push(destinationObject);
-                            localStorage.setItem(
-                                "SD_Destinations",
-                                JSON.stringify(destinationsArr)
-                            );
-                        }
-                    }
-                } catch (e) {
-                    if (debugMode) console.log(">>> ", e.message);
+            // check if localStorage array is empty
+            if (localStorageArr === null) {
+                // if empty, add new destination to array
+                destinationsArr.push(destinationObject);
+                localStorage.setItem("SD_Destinations", JSON.stringify(destinationsArr));
+            } else {
+                // if not empty, check if destination is already in array
+                const destinationExists = localStorageArr.some((destination) => destination.destination === destinationDisplay);
+                if (!destinationExists) {
+                    // if not in array, add new destination to array
+                    localStorageArr.push(destinationObject);
+                    localStorage.setItem("SD_Destinations", JSON.stringify(localStorageArr));
                 }
-            });
+            }
+
+            // if array is greater than 6, remove first element
+            if (localStorageArr.length >= 6) {
+                localStorageArr.shift();
+                localStorage.setItem("SD_Destinations", JSON.stringify(localStorageArr));
+            }
         } catch (e) {
             if (debugMode) console.log(">>> ", e.message);
         }
@@ -87,16 +89,12 @@
     // render the last 5 destinations in the homepage
     const renderDestinations = () => {
         try {
-            destinationsArr = JSON.parse(
-                localStorage.getItem("SD_Destinations")
-            );
+            const destinationsArr = JSON.parse(localStorage.getItem("SD_Destinations"));
 
             // only run if there are 3 or more destinations stored in local storage
             if (destinationsArr.length >= 3) {
                 // declare vars
-                const homepageContainer = document.querySelector(
-                        ".b24vno-3.itkUAY:not(.sd-render)"
-                    ),
+                const homepageContainer = document.querySelector(".b24vno-3.itkUAY:not(.sd-render)"),
                     destinationContainer = document.createElement("div"),
                     destinationFlexContainer = document.createElement("div"),
                     destinationTitle = document.createElement("h2");
@@ -106,20 +104,10 @@
                 homepageContainer.classList.add("sd-render");
 
                 // classes for destination container
-                destinationContainer.classList.add(
-                    "liqrfp-0",
-                    "liqrfp-1",
-                    "ivhDWa"
-                );
-                destinationFlexContainer.classList.add(
-                    "sd-destinations-container"
-                );
+                destinationContainer.classList.add("liqrfp-0", "liqrfp-1", "ivhDWa");
+                destinationFlexContainer.classList.add("sd-destinations-container");
                 // classes for destination title
-                destinationTitle.classList.add(
-                    "sc-15ch3b2-1",
-                    "cfYnfE",
-                    "sd-destinations-title"
-                );
+                destinationTitle.classList.add("sc-15ch3b2-1", "cfYnfE", "sd-destinations-title");
 
                 // set destination title text
                 destinationTitle.innerText = "Recently searched destinations";
@@ -135,71 +123,55 @@
                         destinationElement.href = destination.url;
 
                         // insert into container
-                        destinationFlexContainer.appendChild(
-                            destinationElement
-                        );
+                        destinationFlexContainer.appendChild(destinationElement);
                     } catch (e) {
                         if (debugMode) console.log(">>> ", e.message);
                     }
                 });
 
                 // insert into DOM
-                homepageContainer.insertAdjacentElement(
-                    "afterbegin",
-                    destinationContainer
-                );
-                destinationContainer.insertAdjacentElement(
-                    "afterbegin",
-                    destinationTitle
-                );
-                destinationTitle.insertAdjacentElement(
-                    "afterend",
-                    destinationFlexContainer
-                );
+                homepageContainer.insertAdjacentElement("afterbegin", destinationContainer);
+                destinationContainer.insertAdjacentElement("afterbegin", destinationTitle);
+                destinationTitle.insertAdjacentElement("afterend", destinationFlexContainer);
             }
         } catch (e) {
             if (debugMode) console.log(">>> ", e.message);
         }
     };
 
-    // remove duplicates from localStorage SD_Destinations and display the last 5 destinations
-    const removeDuplicates = () => {
+    const mutationObserver = () => {
         try {
-            destinationsArr = JSON.parse(
-                localStorage.getItem("SD_Destinations")
-            );
-
-            // remove duplicates
-            destinationsArr = destinationsArr.filter(
-                (destination, index) =>
-                    destinationsArr.findIndex(
-                        (destination2) =>
-                            destination2.destination === destination.destination
-                    ) === index
-            );
-            // limit to 5 destinations
-            destinationsArr = destinationsArr.slice(
-                0,
-                Math.min(destinationsArr.length, 5)
-            );
-            // update localStorage
-            localStorage.setItem(
-                "SD_Destinations",
-                JSON.stringify(destinationsArr)
-            );
-        } catch (e) {
-            if (debugMode) console.log(">>> ", e.message);
-        }
-    };
-
-    const mutationObserver = (functionToCall, selector) => {
-        try {
-            const targetNode = document.querySelector(selector);
+            const targetNode = document;
 
             const config = { attributes: true, childList: true, subtree: true };
 
             const observer = new MutationObserver(function () {
-                functionToCall();
+                waitForElements(
+                    ".sc-18xxwx2-0.jGcqDJ",
+                    false,
+                    function () {
+                        try {
+                            // store destinations - on search pages only
+                            if (window.location.pathname.includes("/search")) {
+                                if (location.pathname.split("/")[2] !== lastVisitedLocation) {
+                                    lastVisitedLocation = location.pathname.split("/")[2];
+                                    storeDestination();
+                                }
+                            }
+
+                            // homepage only
+                            if (window.location.pathname === "/") {
+                                // render destinations
+                                renderDestinations();
+                            }
+
+                            if (debugMode) console.log("Challenge 2 is running");
+                        } catch (e) {
+                            if (debugMode) console.log(">>> ", e.message);
+                        }
+                    },
+                    1000
+                );
             });
 
             observer.observe(targetNode, config);
@@ -208,28 +180,5 @@
         }
     };
 
-    waitForElements(
-        ".sc-15ch3b2-0.izpEBc, .b24vno-3.itkUAY",
-        false,
-        function () {
-            try {
-                // store destinations w/ mutation observer
-                storeDestination();
-                mutationObserver(storeDestination, ".sc-18xxwx2-0.jGcqDJ");
-
-                // render destinations w/ mutation observer
-                renderDestinations();
-                mutationObserver(renderDestinations, ".sd-render");
-
-                // remove duplicates
-                removeDuplicates();
-                mutationObserver(removeDuplicates, ".sd-render");
-
-                if (debugMode) console.log("Challenge 2 is running");
-            } catch (e) {
-                if (debugMode) console.log(">>> ", e.message);
-            }
-        },
-        1000
-    );
+    mutationObserver();
 })();

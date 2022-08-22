@@ -122,14 +122,33 @@
         }
     };
 
+    const mutationObserver = (functionToCall, selector) => {
+        try {
+            const targetNode = document.querySelector(selector);
+
+            const config = { attributes: true, childList: true, subtree: true };
+
+            const observer = new MutationObserver(function () {
+                functionToCall();
+            });
+
+            observer.observe(targetNode, config);
+        } catch (e) {
+            if (debugMode) console.log(e.message);
+        }
+    };
+
     waitForElements(
         ".b24vno-2",
         false,
         function () {
             try {
                 // run for mobile only
-                if (window.innerWidth < 768) listings();
-                if (debugMode) console.log("Challenge 1 is running");
+                if (window.innerWidth < 768) {
+                    listings();
+                    mutationObserver(listings, ".sc-18xxwx2-0.jGcqDJ");
+                    if (debugMode) console.log("Challenge 1 is running");
+                }
             } catch (e) {
                 if (debugMode) console.log(">>> ", e.message);
             }
